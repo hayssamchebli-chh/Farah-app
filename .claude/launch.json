@@ -2,7 +2,13 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "farah-app",
+      "name": "farah-streamlit",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "streamlit", "run", "streamlit_app.py", "--server.port", "8501", "--server.headless", "true"],
+      "port": 8501
+    },
+    {
+      "name": "farah-static",
       "runtimeExecutable": "npx",
       "runtimeArgs": ["--yes", "http-server", ".", "-p", "8899", "-c-1"],
       "port": 8899

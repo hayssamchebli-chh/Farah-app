@@ -1,19 +1,18 @@
 # Price History Pivot
 
-A single-page browser tool that turns a flat sales-lines Excel export into a pivot with
+A password-protected Streamlit app that turns a flat sales-lines Excel export into a pivot with
 **one row per item number** and every transaction for that item laid out newest → oldest.
-
-No install, no server, no upload — the file is parsed entirely in your browser.
 
 ## Input
 
-Any `.xlsx` / `.xls` / `.csv` whose header row contains these columns (extra columns are ignored,
-and the header does not have to be the first row):
+Any `.xlsx` / `.xlsm` / `.xls` / `.csv` whose header row contains these columns (extra columns are
+ignored, and the header does not have to be the first row):
 
 | No. | Description | Document No. | Customer Name | Quantity | Pre-Discount Price | Discount % | Net Price | OC Net Price | Currency | Posting Date |
 |---|---|---|---|---|---|---|---|---|---|---|
 
 `No.` may repeat — each repetition is one transaction for that item.
+`sample_data.xlsx` in this repo is a small example.
 
 ## Output
 
@@ -26,29 +25,60 @@ No. | R  Date  Qty  Price  Curr. | R  Date  Qty  Price  Curr. | ...
   transactions requires; shorter items leave the trailing blocks blank.
 - **R** — 1, 2, 3 … the occurrence number.
 - **Date** — Posting Date. Block 1 is the most recent transaction, then progressively older.
-  Lines with no date sort last; same-date lines keep their original file order.
+  Undated lines sort last; same-date lines keep their original file order.
 - **Qty** — Quantity.
 - **Price** — OC Net Price (falls back to Net Price if there is no OC column).
 - **Curr.** — Currency.
 
-A "Description" column can be added next to `No.` with the checkbox.
+A Description column can be added next to `No.` with the checkbox. Results are previewed in the
+page and downloadable as a formatted `.xlsx`.
 
-Preview the first 100 rows in the page, then **Download Excel** for the full result.
+## The password
 
-## Running it
+The app asks for a password before showing anything. It is read from Streamlit secrets — it is
+**not** stored in this repository.
 
-Open `index.html` — that's it. Or serve the folder:
+**On Streamlit Community Cloud:** open the app → **Settings → Secrets** and paste:
 
-```bash
-npx http-server . -p 8899
+```toml
+app_password = "your-password-here"
 ```
 
-Hosted version (GitHub Pages): enable Pages on this repo with source **GitHub Actions**; the
-included workflow publishes on every push to `main`.
+**Locally:** copy `.streamlit/secrets.toml.example` to `.streamlit/secrets.toml` and set the same
+key (that file is gitignored).
+
+Change the password by editing that secret — no code change and no redeploy needed. Note this is a
+single shared password, not per-user accounts; anyone with the link still needs it to get in.
+
+## Deploying to Streamlit Community Cloud
+
+1. Push this repo to GitHub.
+2. Go to [share.streamlit.io](https://share.streamlit.io) → **Create app** → **Deploy a public app
+   from GitHub**.
+3. Repository `hayssamchebli-chh/Farah-app`, branch `main`, main file `streamlit_app.py`.
+4. Before clicking Deploy, open **Advanced settings → Secrets** and add the `app_password` line
+   above (or add it right after, under Settings → Secrets).
+5. Deploy. Every push to `main` redeploys automatically.
+
+## Running locally
+
+```bash
+pip install -r requirements.txt
+```
+
+```bash
+streamlit run streamlit_app.py
+```
+
+## Offline version
+
+`standalone/index.html` is the same tool as a single self-contained web page — open it directly in
+a browser, no Python and no network needed. It has **no password gate**; it is meant for local use.
 
 ## Files
 
-- `index.html` — markup
-- `styles.css` — styling (light + dark)
-- `app.js` — parsing, pivot, and Excel export
-- `vendor/xlsx.full.min.js` — SheetJS 0.18.5, vendored so the tool works offline
+- `streamlit_app.py` — the app: parsing, pivot, Excel export, password gate
+- `requirements.txt` — Python dependencies
+- `.streamlit/secrets.toml.example` — template for the password secret
+- `sample_data.xlsx` — example input
+- `standalone/` — offline browser-only version (SheetJS 0.18.5 vendored)
