@@ -96,7 +96,10 @@ span[class*="material-symbols"], [data-testid="stExpanderIcon"] {{
 }}
 [data-testid="stAppViewContainer"] {{ background: var(--canvas); }}
 [data-testid="stHeader"] {{ background: transparent; }}
-.block-container {{ padding-top: 1.6rem; max-width: 1280px; }}
+/* clear Streamlit's floating toolbar (Share / star / edit) so the masthead
+   never sits underneath it */
+.block-container {{ padding-top: 4.75rem; max-width: 1280px; }}
+[data-testid="stToolbar"] {{ z-index: 100; }}
 
 /* ---- masthead ---- */
 .hb-head {{
