@@ -1,17 +1,18 @@
+/* Harb Electric brand palette, sampled from harbelectric.com. */
 :root {
-  --bg: #f6f7f9;
+  --bg: #f4f6f9;
   --card: #ffffff;
-  --ink: #1a1d21;
-  --muted: #6b7280;
-  --line: #e3e6ea;
-  --accent: #1f6feb;
+  --ink: #16171e;
+  --muted: #626974;
+  --line: #e3e7ec;
+  --accent: #005aa7;
   --ok: #0f7b3f;
   --err: #b42318;
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #14161a; --card: #1c1f24; --ink: #e8eaed; --muted: #9aa1ab;
-    --line: #2c3138; --accent: #4f9bff; --ok: #4ec27f; --err: #ff7b6b;
+    --bg: #12141a; --card: #1b1e26; --ink: #e9ecf1; --muted: #9aa2ae;
+    --line: #2b303a; --accent: #4a9ce0; --ok: #4ec27f; --err: #ff7b6b;
   }
 }
 
@@ -24,7 +25,12 @@ body {
   background: var(--bg);
 }
 header, main, footer { max-width: 1100px; margin: 0 auto; }
-h1 { margin: 0 0 .25rem; font-size: 1.6rem; letter-spacing: -.01em; }
+.brandbar { display: flex; align-items: center; gap: .75rem; margin-bottom: .6rem; }
+h1 { margin: 0; font-size: 1.6rem; letter-spacing: -.01em; line-height: 1.1; }
+.eyebrow {
+  margin: .15rem 0 0; font-size: .74rem; color: var(--muted);
+  letter-spacing: .08em; text-transform: uppercase;
+}
 .sub { margin: 0 0 1.5rem; color: var(--muted); }
 .hint { color: var(--muted); font-size: .85rem; margin: .5rem 0 0; }
 .hidden { display: none !important; }
@@ -83,10 +89,10 @@ thead th {
   border-bottom: 2px solid var(--line);
 }
 td.num { text-align: right; font-variant-numeric: tabular-nums; }
-td.rcell { background: #1f6feb; color: #fff; font-weight: 600; text-align: center; }
+td.rcell { background: var(--accent); color: #fff; font-weight: 600; text-align: center; }
 .sticky { position: sticky; left: 0; background: var(--card); font-weight: 600; z-index: 1; }
 thead th.sticky { z-index: 3; }
 tbody tr:hover td { background: rgba(127, 127, 127, .07); }
-tbody tr:hover td.rcell { background: #1f6feb; }
+tbody tr:hover td.rcell { background: var(--accent); }
 
 footer { margin-top: 2rem; color: var(--muted); font-size: .8rem; text-align: center; }

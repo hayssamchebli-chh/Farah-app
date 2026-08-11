@@ -1,0 +1,14 @@
+# Harb Electric brand theme (colours sampled from harbelectric.com).
+[theme]
+base = "light"
+primaryColor = "#005AA7"
+backgroundColor = "#F4F6F9"
+secondaryBackgroundColor = "#FFFFFF"
+textColor = "#16171E"
+font = "sans serif"
+
+[client]
+toolbarMode = "minimal"
+
+[browser]
+gatherUsageStats = false

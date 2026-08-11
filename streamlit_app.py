@@ -21,9 +21,18 @@ from openpyxl.utils import get_column_letter
 
 BLOCK = ["R", "Date", "Qty", "Price", "Curr."]
 
+# Harb Electric brand palette, sampled from harbelectric.com.
+BRAND_BLUE = "#005AA7"
+BRAND_BLUE_DARK = "#00447E"
+BRAND_INK = "#16171E"
+BRAND_GREY = "#626974"
+BRAND_LINE = "#E3E7EC"
+BRAND_SURFACE = "#FFFFFF"
+BRAND_CANVAS = "#F4F6F9"
+
 # Fill for the R cells that actually hold an occurrence number. Change here to
 # restyle both the Excel export and the on-screen preview.
-R_BLUE = "1F6FEB"
+R_BLUE = BRAND_BLUE.lstrip("#")
 
 # Header aliases, matched after normalising (lowercase, alphanumerics only).
 FIELDS = {
@@ -42,7 +51,195 @@ LABELS = {
     "date": "Posting Date",
 }
 
-st.set_page_config(page_title="Price History Pivot", page_icon="📊", layout="wide")
+st.set_page_config(
+    page_title="Price History Pivot · Harb Electric",
+    page_icon="data:image/svg+xml,"
+    "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'>"
+    "<rect width='32' height='32' rx='7' fill='%23005AA7'/>"
+    "<path d='M18.6 4 9 18h5.4L13 28l9.6-14h-5.4z' fill='white'/></svg>",
+    layout="wide",
+)
+
+
+# -------------------------------------------------------------------------- chrome
+
+# Inline mark: a bolt in a rounded square. Swap in the official Harb Electric
+# logo file here if you'd rather use the real asset.
+LOGO_SVG = (
+    '<svg width="38" height="38" viewBox="0 0 32 32" role="img" aria-label="Harb Electric">'
+    f'<rect width="32" height="32" rx="7" fill="{BRAND_BLUE}"/>'
+    '<path d="M18.6 4 9 18h5.4L13 28l9.6-14h-5.4z" fill="#fff"/></svg>'
+)
+
+CSS = f"""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Teko:wght@500;600&display=swap');
+
+:root {{
+  --brand: {BRAND_BLUE};
+  --brand-dark: {BRAND_BLUE_DARK};
+  --ink: {BRAND_INK};
+  --grey: {BRAND_GREY};
+  --line: {BRAND_LINE};
+  --surface: {BRAND_SURFACE};
+  --canvas: {BRAND_CANVAS};
+}}
+
+html, body, [class*="st-"], .stMarkdown, input, button, select, textarea {{
+  font-family: 'Barlow', -apple-system, 'Segoe UI', Roboto, sans-serif;
+}}
+[data-testid="stAppViewContainer"] {{ background: var(--canvas); }}
+[data-testid="stHeader"] {{ background: transparent; }}
+.block-container {{ padding-top: 1.6rem; max-width: 1280px; }}
+
+/* ---- masthead ---- */
+.hb-head {{
+  display: flex; align-items: center; gap: .85rem;
+  padding: 1rem 1.35rem; margin-bottom: 1.4rem;
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: 12px; border-top: 3px solid var(--brand);
+  box-shadow: 0 1px 2px rgba(22,23,30,.05);
+}}
+.hb-head .hb-title {{
+  font-family: 'Teko', 'Barlow', sans-serif; font-weight: 600;
+  font-size: 1.9rem; line-height: 1; letter-spacing: .02em;
+  color: var(--ink); margin: 0;
+}}
+.hb-head .hb-sub {{
+  font-size: .82rem; color: var(--grey); margin: .15rem 0 0;
+  letter-spacing: .04em; text-transform: uppercase;
+}}
+.hb-head .hb-spacer {{ flex: 1 1 auto; }}
+.hb-badge {{
+  font-size: .72rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--brand); background: rgba(0,90,167,.08);
+  border: 1px solid rgba(0,90,167,.18); border-radius: 999px; padding: .3rem .7rem;
+}}
+
+/* ---- section labels ---- */
+.hb-step {{
+  display: flex; align-items: center; gap: .55rem;
+  font-size: .78rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--grey); margin: .2rem 0 .6rem;
+}}
+.hb-step span.n {{
+  display: inline-grid; place-items: center; width: 1.35rem; height: 1.35rem;
+  border-radius: 50%; background: var(--brand); color: #fff; font-size: .72rem;
+}}
+
+/* ---- stat cards ---- */
+.hb-stats {{ display: flex; flex-wrap: wrap; gap: .9rem; margin: .2rem 0 1.1rem; }}
+.hb-stat {{
+  flex: 1 1 170px; background: var(--surface); border: 1px solid var(--line);
+  border-radius: 10px; padding: .85rem 1rem; border-left: 3px solid var(--brand);
+}}
+.hb-stat .v {{
+  font-family: 'Teko','Barlow',sans-serif; font-size: 2rem; line-height: 1.05;
+  color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums;
+}}
+.hb-stat .k {{
+  font-size: .74rem; letter-spacing: .08em; text-transform: uppercase; color: var(--grey);
+}}
+
+/* ---- panels ---- */
+[data-testid="stFileUploader"], [data-testid="stDataFrame"] {{
+  background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+}}
+[data-testid="stFileUploader"] {{ padding: .5rem .75rem; }}
+[data-testid="stFileUploader"] section {{ border-radius: 8px; }}
+[data-testid="stFileUploaderDropzone"] {{ background: transparent; }}
+
+/* ---- controls ---- */
+[data-testid="stFormSubmitButton"] button,
+[data-testid="stDownloadButton"] button,
+[data-testid="stBaseButton-primary"] {{
+  background: var(--brand) !important; color: #fff !important;
+  border: 1px solid var(--brand) !important;
+  border-radius: 8px; font-weight: 600; letter-spacing: .02em;
+  padding: .5rem 1.15rem; min-height: 44px; cursor: pointer;
+  transition: background 180ms ease, box-shadow 180ms ease;
+}}
+[data-testid="stFormSubmitButton"] button:hover,
+[data-testid="stDownloadButton"] button:hover,
+[data-testid="stBaseButton-primary"]:hover {{
+  background: var(--brand-dark) !important; border-color: var(--brand-dark) !important;
+  box-shadow: 0 2px 8px rgba(0,90,167,.25);
+}}
+[data-testid="stFormSubmitButton"] button:focus-visible,
+[data-testid="stDownloadButton"] button:focus-visible,
+[data-testid="stBaseButton-primary"]:focus-visible,
+input:focus-visible {{
+  outline: 3px solid rgba(0,90,167,.45); outline-offset: 2px;
+}}
+/* the uploader's own "Browse files" button stays secondary */
+[data-testid="stFileUploader"] button {{
+  border-radius: 8px; font-weight: 600; cursor: pointer; min-height: 44px;
+  border-color: var(--brand); color: var(--brand);
+}}
+[data-testid="stFileUploader"] button:hover {{
+  background: rgba(0,90,167,.06); border-color: var(--brand-dark); color: var(--brand-dark);
+}}
+[data-testid="stTextInput"] input {{ border-radius: 8px; }}
+[data-testid="stTextInput"] input:focus {{ border-color: var(--brand); }}
+
+/* ---- login card ---- */
+.hb-login {{
+  background: var(--surface); border: 1px solid var(--line); border-top: 3px solid var(--brand);
+  border-radius: 14px; padding: 2rem 2rem 1.2rem;
+  box-shadow: 0 10px 30px rgba(22,23,30,.07);
+}}
+.hb-login h2 {{
+  font-family: 'Teko','Barlow',sans-serif; font-weight: 600; font-size: 1.75rem;
+  color: var(--ink); margin: .9rem 0 .1rem; line-height: 1.1;
+}}
+.hb-login p {{ color: var(--grey); font-size: .9rem; margin: 0 0 .4rem; }}
+
+/* ---- footer ---- */
+.hb-foot {{
+  margin-top: 2.2rem; padding-top: 1rem; border-top: 1px solid var(--line);
+  color: var(--grey); font-size: .78rem; display: flex; gap: .5rem; flex-wrap: wrap;
+}}
+.hb-foot b {{ color: var(--ink); font-weight: 600; }}
+
+@media (prefers-reduced-motion: reduce) {{
+  * {{ transition: none !important; animation: none !important; }}
+}}
+@media (max-width: 640px) {{
+  .hb-head {{ flex-wrap: wrap; }}
+  .hb-head .hb-title {{ font-size: 1.6rem; }}
+}}
+</style>
+"""
+
+
+def masthead() -> None:
+    # NB: keep this HTML flush left — indented lines are parsed as a code block.
+    st.markdown(
+        CSS
+        + '<div class="hb-head">'
+        + LOGO_SVG.strip()
+        + '<div><p class="hb-title">Price History Pivot</p>'
+        '<p class="hb-sub">Harb Electric &middot; Tendering</p></div>'
+        '<div class="hb-spacer"></div>'
+        '<span class="hb-badge">Internal tool</span>'
+        "</div>",
+        unsafe_allow_html=True,
+    )
+
+
+def step(number: int, label: str) -> None:
+    st.markdown(
+        f'<div class="hb-step"><span class="n">{number}</span>{label}</div>',
+        unsafe_allow_html=True,
+    )
+
+
+def footer() -> None:
+    st.markdown(
+        '<div class="hb-foot"><b>Harb Electric</b><span>&middot;</span>'
+        "<span>Files are processed in-session and never stored.</span></div>",
+        unsafe_allow_html=True,
+    )
 
 
 # --------------------------------------------------------------------------- auth
@@ -57,6 +254,7 @@ def check_password() -> bool:
         expected = st.secrets.get("app_password")
     except Exception:  # no secrets.toml at all
         expected = None
+    st.markdown(CSS, unsafe_allow_html=True)
     if not expected:
         st.error(
             "No app password is configured. Add `app_password = \"...\"` to the app's "
@@ -65,19 +263,30 @@ def check_password() -> bool:
         )
         return False
 
-    st.title("Price History Pivot")
-    st.caption("This tool is private. Enter the password to continue.")
+    _, mid, _ = st.columns([1, 1.1, 1])
+    with mid:
+        st.markdown(
+            f'<div class="hb-login">{LOGO_SVG}'
+            "<h2>Price History Pivot</h2>"
+            "<p>Harb Electric internal tool. Enter the access password to continue.</p>",
+            unsafe_allow_html=True,
+        )
+        with st.form("login"):
+            pwd = st.text_input(
+                "Password", type="password", autocomplete="current-password",
+                placeholder="Access password",
+            )
+            submitted = st.form_submit_button(
+                "Sign in", use_container_width=True, type="primary"
+            )
+        st.markdown("</div>", unsafe_allow_html=True)
 
-    with st.form("login"):
-        pwd = st.text_input("Password", type="password")
-        submitted = st.form_submit_button("Enter")
-
-    if submitted:
-        if hmac.compare_digest(pwd, str(expected)):
-            st.session_state["authenticated"] = True
-            st.rerun()
-        else:
-            st.error("Incorrect password.")
+        if submitted:
+            if hmac.compare_digest(pwd, str(expected)):
+                st.session_state["authenticated"] = True
+                st.rerun()
+            else:
+                st.error("Incorrect password. Please try again.")
     return False
 
 
@@ -322,21 +531,38 @@ def style_frame(df: pd.DataFrame, pivot: dict):
 # -------------------------------------------------------------------------- app
 
 
-def main() -> None:
-    st.title("📊 Price History Pivot")
-    st.caption(
-        "Upload a sales-lines Excel export and get one row per item, "
-        "with every transaction laid out newest → oldest."
+def stat_cards(pivot: dict) -> None:
+    cards = [
+        (pivot["items"], "Unique items"),
+        (pivot["lines"], "Source lines"),
+        (pivot["max_dup"], "Max transactions / item"),
+    ]
+    st.markdown(
+        '<div class="hb-stats">'
+        + "".join(f'<div class="hb-stat"><div class="v">{v:,}</div>'
+                  f'<div class="k">{k}</div></div>' for v, k in cards)
+        + "</div>",
+        unsafe_allow_html=True,
     )
 
+
+def main() -> None:
+    masthead()
+
+    step(1, "Upload the sales-lines export")
     uploaded = st.file_uploader(
         "Excel or CSV file",
         type=["xlsx", "xlsm", "xls", "csv"],
+        label_visibility="collapsed",
         help="Expected columns: No., Description, Document No., Customer Name, Quantity, "
         "Pre-Discount Price, Discount %, Net Price, OC Net Price, Currency, Posting Date",
     )
     if not uploaded:
-        st.info("Choose a file to begin. Nothing is stored — the file is processed per session.")
+        st.caption(
+            "Accepted: .xlsx, .xlsm, .xls, .csv — the header row does not have to be the first "
+            "row. Files are processed in this session only and are never stored."
+        )
+        footer()
         return
 
     data = uploaded.getvalue()
@@ -348,13 +574,21 @@ def main() -> None:
             sheet_rows = book
     except Exception as exc:  # noqa: BLE001 — surface any reader failure to the user
         st.error(f"Could not read that file: {exc}")
+        footer()
         return
 
+    step(2, "Choose the sheet")
     col1, col2 = st.columns([2, 1])
     with col1:
-        sheet = st.selectbox("Sheet", list(sheet_rows.keys()))
+        sheet = st.selectbox(
+            "Sheet", list(sheet_rows.keys()),
+            help="Pick the tab holding the sales lines.",
+        )
     with col2:
-        include_desc = st.checkbox("Include a Description column")
+        include_desc = st.checkbox(
+            "Include a Description column",
+            help="Adds the item description beside the item number.",
+        )
 
     rows = sheet_rows[sheet].where(pd.notna(sheet_rows[sheet]), None).values.tolist()
 
@@ -362,25 +596,31 @@ def main() -> None:
         pivot = build_pivot(rows, include_desc)
     except ValueError as exc:
         st.error(str(exc))
+        footer()
         return
 
-    st.success(
-        f"{pivot['items']} unique item{'' if pivot['items'] == 1 else 's'} · "
-        f"{pivot['lines']} lines · up to {pivot['max_dup']} "
-        f"transaction{'' if pivot['max_dup'] == 1 else 's'} per item"
-    )
+    step(3, "Review and export")
+    stat_cards(pivot)
     if pivot["skipped"]:
-        st.warning(f"{pivot['skipped']} row(s) were skipped for having no No. value.")
+        st.warning(
+            f"{pivot['skipped']} row(s) were skipped because they had no No. value. "
+            "Check for subtotal or note rows in the source file."
+        )
 
     st.dataframe(style_frame(to_frame(pivot), pivot), use_container_width=True, hide_index=True)
+    st.caption(
+        "Each block reads newest → oldest. Blue **R** cells number the transactions per item; "
+        "blank blocks mean that item has fewer transactions."
+    )
 
     st.download_button(
-        "⬇️ Download Excel",
+        "Download Excel",
         data=to_excel(pivot),
         file_name=f"price-history-pivot-{date.today():%Y-%m-%d}.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         type="primary",
     )
+    footer()
 
 
 if __name__ == "__main__" and check_password():

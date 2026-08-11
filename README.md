@@ -80,10 +80,31 @@ a browser, no Python and no network needed. It has **no password gate**; it is m
 Its on-screen R cells are blue too, but its `.xlsx` download is unstyled — the free build of SheetJS
 cannot write cell fills. Use the Streamlit app when you need the colour in the file.
 
+## Branding
+
+The interface follows Harb Electric's identity, sampled from
+[harbelectric.com](https://harbelectric.com):
+
+| Token | Value | Used for |
+|---|---|---|
+| Brand blue | `#005AA7` | buttons, accents, R cells, focus rings |
+| Brand blue (dark) | `#00447E` | hover/pressed states |
+| Ink | `#16171E` | headings and body text |
+| Grey | `#626974` | secondary text, labels |
+| Canvas / surface | `#F4F6F9` / `#FFFFFF` | page background / cards |
+| Type | Teko (display) + Barlow (UI) | the site's own fonts |
+
+All foreground/background pairs meet WCAG AA (white on brand blue is 6.95:1).
+The tokens live at the top of `streamlit_app.py` and in `.streamlit/config.toml`.
+
+The header uses a generic bolt mark rather than the official logo file — replace `LOGO_SVG` in
+`streamlit_app.py` with the real asset if you want the exact company logo.
+
 ## Files
 
 - `streamlit_app.py` — the app: parsing, pivot, Excel export, password gate
 - `requirements.txt` — Python dependencies
+- `.streamlit/config.toml` — brand theme (committed)
 - `.streamlit/secrets.toml.example` — template for the password secret
 - `sample_data.xlsx` — example input
 - `standalone/` — offline browser-only version (SheetJS 0.18.5 vendored)
