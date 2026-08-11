@@ -53,22 +53,21 @@ LABELS = {
 
 st.set_page_config(
     page_title="Price History Pivot · Harb Electric",
-    page_icon="data:image/svg+xml,"
-    "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'>"
-    "<rect width='32' height='32' rx='7' fill='%23005AA7'/>"
-    "<path d='M18.6 4 9 18h5.4L13 28l9.6-14h-5.4z' fill='white'/></svg>",
+    page_icon="📊",
     layout="wide",
 )
 
 
 # -------------------------------------------------------------------------- chrome
 
-# Inline mark: a bolt in a rounded square. Swap in the official Harb Electric
-# logo file here if you'd rather use the real asset.
+# Inline mark: ascending bars in a rounded square, matching the 📊 tab icon.
+# Swap in the official Harb Electric logo file here to use the real asset.
 LOGO_SVG = (
-    '<svg width="38" height="38" viewBox="0 0 32 32" role="img" aria-label="Harb Electric">'
+    '<svg width="38" height="38" viewBox="0 0 32 32" role="img" aria-label="Price History Pivot">'
     f'<rect width="32" height="32" rx="7" fill="{BRAND_BLUE}"/>'
-    '<path d="M18.6 4 9 18h5.4L13 28l9.6-14h-5.4z" fill="#fff"/></svg>'
+    '<rect x="7.5" y="18" width="4.5" height="7.5" rx="1.2" fill="#fff" opacity=".72"/>'
+    '<rect x="13.75" y="13" width="4.5" height="12.5" rx="1.2" fill="#fff" opacity=".86"/>'
+    '<rect x="20" y="7" width="4.5" height="18.5" rx="1.2" fill="#fff"/></svg>'
 )
 
 CSS = f"""
@@ -85,8 +84,15 @@ CSS = f"""
   --canvas: {BRAND_CANVAS};
 }}
 
-html, body, [class*="st-"], .stMarkdown, input, button, select, textarea {{
+html, body, .stApp, [data-testid="stAppViewContainer"], .stMarkdown,
+h1, h2, h3, h4, p, label, span, div, input, button, select, textarea {{
   font-family: 'Barlow', -apple-system, 'Segoe UI', Roboto, sans-serif;
+}}
+/* ...but never the icon spans: Streamlit renders Material ligatures, so an
+   overridden font shows the raw word ("upload", "visibility") instead. */
+[data-testid="stIconMaterial"], .material-icons, .material-icons-outlined,
+span[class*="material-symbols"], [data-testid="stExpanderIcon"] {{
+  font-family: 'Material Symbols Rounded' !important;
 }}
 [data-testid="stAppViewContainer"] {{ background: var(--canvas); }}
 [data-testid="stHeader"] {{ background: transparent; }}
