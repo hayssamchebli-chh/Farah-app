@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Farah &mdash; Price History Pivot</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<header>
+  <h1>Price History Pivot</h1>
+  <p class="sub">Upload a sales-lines Excel file and get one row per item, with every transaction laid out newest&nbsp;&rarr;&nbsp;oldest.</p>
+</header>
+
+<main>
+  <section id="drop" class="drop">
+    <input type="file" id="file" accept=".xlsx,.xlsm,.xls,.csv" hidden />
+    <p><strong>Drop your Excel file here</strong> or <button type="button" id="browse" class="link">browse</button></p>
+    <p class="hint">Expected columns: No., Description, Document No., Customer Name, Quantity, Pre-Discount Price, Discount %, Net Price, OC Net Price, Currency, Posting Date</p>
+  </section>
+
+  <section id="options" class="options hidden">
+    <label><input type="checkbox" id="includeDesc" /> Include a Description column</label>
+    <label>Sheet:
+      <select id="sheet"></select>
+    </label>
+  </section>
+
+  <section id="status" class="status hidden"></section>
+
+  <section id="result" class="result hidden">
+    <div class="toolbar">
+      <span id="summary" class="summary"></span>
+      <button type="button" id="download" class="primary">Download Excel</button>
+      <button type="button" id="reset" class="ghost">Start over</button>
+    </div>
+    <div class="tablewrap"><table id="preview"></table></div>
+    <p class="hint" id="previewNote"></p>
+  </section>
+</main>
+
+<footer>Runs entirely in your browser &mdash; no file ever leaves your machine.</footer>
+
+<script src="vendor/xlsx.full.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
