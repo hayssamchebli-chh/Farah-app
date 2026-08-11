@@ -30,6 +30,9 @@ No. | R  Date  Qty  Price  Curr. | R  Date  Qty  Price  Curr. | ...
 - **Price** — OC Net Price (falls back to Net Price if there is no OC column).
 - **Curr.** — Currency.
 
+Filled **R** cells are shaded blue (blank padding is left alone), on screen and in the download.
+Change `R_BLUE` at the top of `streamlit_app.py` to use a different colour.
+
 A Description column can be added next to `No.` with the checkbox. Results are previewed in the
 page and downloadable as a formatted `.xlsx`.
 
@@ -74,6 +77,8 @@ streamlit run streamlit_app.py
 
 `standalone/index.html` is the same tool as a single self-contained web page — open it directly in
 a browser, no Python and no network needed. It has **no password gate**; it is meant for local use.
+Its on-screen R cells are blue too, but its `.xlsx` download is unstyled — the free build of SheetJS
+cannot write cell fills. Use the Streamlit app when you need the colour in the file.
 
 ## Files
 

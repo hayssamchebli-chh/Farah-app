@@ -16,10 +16,14 @@ from datetime import date, datetime, timedelta
 import pandas as pd
 import streamlit as st
 from openpyxl import Workbook
-from openpyxl.styles import Alignment, Font
+from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.utils import get_column_letter
 
 BLOCK = ["R", "Date", "Qty", "Price", "Curr."]
+
+# Fill for the R cells that actually hold an occurrence number. Change here to
+# restyle both the Excel export and the on-screen preview.
+R_BLUE = "1F6FEB"
 
 # Header aliases, matched after normalising (lowercase, alphanumerics only).
 FIELDS = {
@@ -267,10 +271,19 @@ def to_excel(pivot: dict) -> bytes:
     for i, w in enumerate(widths, start=1):
         ws.column_dimensions[get_column_letter(i)].width = w
 
+    blue_fill = PatternFill("solid", start_color=R_BLUE, end_color=R_BLUE)
+    blue_font = Font(bold=True, color="FFFFFF")
+
     for b in range(pivot["max_dup"]):
-        col = first_block + b * 5 + 2  # 1-based Date column of this block
+        r_col = first_block + b * 5 + 1     # 1-based R column of this block
+        date_col = r_col + 1
         for r in range(2, len(pivot["body"]) + 2):
-            ws.cell(row=r, column=col).number_format = "DD/MM/YYYY"
+            ws.cell(row=r, column=date_col).number_format = "DD/MM/YYYY"
+            r_cell = ws.cell(row=r, column=r_col)
+            if r_cell.value is not None:    # only filled R cells, not the padding
+                r_cell.fill = blue_fill
+                r_cell.font = blue_font
+                r_cell.alignment = Alignment(horizontal="center")
 
     ws.freeze_panes = ws.cell(row=2, column=first_block + 1)
 
@@ -292,6 +305,18 @@ def to_frame(pivot: dict) -> pd.DataFrame:
         for row in pivot["body"]
     ]
     return pd.DataFrame(rows, columns=labels)
+
+
+def style_frame(df: pd.DataFrame, pivot: dict):
+    """Blue-fill the R cells that hold an occurrence number, matching the export."""
+    first_block = 2 if pivot["include_desc"] else 1
+    r_cols = [df.columns[first_block + b * 5] for b in range(pivot["max_dup"])]
+    css = f"background-color: #{R_BLUE}; color: white; font-weight: 600;"
+
+    def paint(col: pd.Series):
+        return [css if v != "" else "" for v in col]
+
+    return df.style.apply(paint, subset=r_cols)
 
 
 # -------------------------------------------------------------------------- app
@@ -347,7 +372,7 @@ def main() -> None:
     if pivot["skipped"]:
         st.warning(f"{pivot['skipped']} row(s) were skipped for having no No. value.")
 
-    st.dataframe(to_frame(pivot), use_container_width=True, hide_index=True)
+    st.dataframe(style_frame(to_frame(pivot), pivot), use_container_width=True, hide_index=True)
 
     st.download_button(
         "⬇️ Download Excel",

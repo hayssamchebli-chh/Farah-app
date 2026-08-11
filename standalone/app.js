@@ -209,10 +209,17 @@
       return '<th' + (i === 0 ? ' class="sticky"' : '') + '>' + h + '</th>';
     }).join('') + '</tr></thead><tbody>';
 
+    var firstBlock = p.includeDesc ? 2 : 1;
+    var isRCol = function (i) {
+      return i >= firstBlock && (i - firstBlock) % 5 === 0;
+    };
+
     p.body.slice(0, maxRows).forEach(function (row) {
       html += '<tr>' + row.map(function (c, i) {
         var v = c instanceof Date ? fmtDate(c) : (c === '' || c == null ? '' : String(c));
-        var cls = i === 0 ? ' class="sticky"' : (typeof c === 'number' ? ' class="num"' : '');
+        var cls = i === 0 ? ' class="sticky"'
+          : (isRCol(i) && v !== '' ? ' class="rcell"'
+            : (typeof c === 'number' ? ' class="num"' : ''));
         return '<td' + cls + '>' + v.replace(/[&<>]/g, function (ch) {
           return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[ch];
         }) + '</td>';
