@@ -57,14 +57,21 @@ span[class*="material-symbols"], [data-testid="stExpanderIcon"] {{
 [data-testid="stToolbar"] {{ z-index: 100; }}
 
 /* ---- top navigation (pills) ---- */
-.st-key-hbnav {{ margin: -.4rem 0 1.3rem; gap: .5rem; }}
+/* the injected <style> lands in its own block and would otherwise reserve a
+   full row of vertical gap */
+[data-testid="stElementContainer"]:has(style) {{ display: none !important; }}
+.st-key-hbnav {{ margin: 0 !important; gap: .7rem; flex-wrap: wrap; }}
 [data-testid="stPageLink"] a {{
-  display: inline-flex; align-items: center; gap: .45rem;
-  padding: .55rem 1rem; min-height: 44px;
+  display: inline-flex; align-items: center; justify-content: center; gap: .6rem;
+  padding: .8rem 2.4rem; min-height: 56px;
   border: 1px solid var(--line); border-radius: 999px;
   background: var(--surface); color: var(--grey) !important;
-  font-weight: 600; font-size: .92rem; text-decoration: none !important;
+  font-weight: 600; font-size: 1.12rem; letter-spacing: .01em;
+  text-decoration: none !important;
   transition: background 160ms ease, border-color 160ms ease, color 160ms ease;
+}}
+[data-testid="stPageLink"] a [data-testid="stIconMaterial"] {{
+  font-size: 1.35rem !important; width: 1.35rem; height: 1.35rem;
 }}
 [data-testid="stPageLink"] a:hover {{
   border-color: var(--brand); color: var(--brand) !important;
@@ -73,7 +80,7 @@ span[class*="material-symbols"], [data-testid="stExpanderIcon"] {{
 [data-testid="stPageLink"] a:focus-visible {{
   outline: 3px solid rgba(0,90,167,.45); outline-offset: 2px;
 }}
-[data-testid="stPageLink"] a p {{ margin: 0; font-weight: 600; }}
+[data-testid="stPageLink"] a p {{ margin: 0; font-weight: 600; font-size: 1.12rem; }}
 /* the current page: a solid brand pill */
 [class*="st-key-hbnav_on"] [data-testid="stPageLink"] a,
 [class*="st-key-hbnav_on"] [data-testid="stPageLink"] a:hover {{

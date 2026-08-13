@@ -203,8 +203,9 @@ def app() -> None:
     ]
     # Streamlit's own nav is hidden: the pill bar below is the navigation.
     nav = st.navigation(pages, position="hidden")
+    theme.inject_css()
+    theme.nav_bar(pages, nav.title)      # pill bar sits above the masthead
     theme.masthead(nav.title)
-    theme.nav_bar(pages, nav.title)
     nav.run()
 
 
