@@ -1,16 +1,17 @@
 """Price History Pivot — Harb Electric.
 
-Two pages over one pivot engine:
-  * Selling Prices  — sales lines (OC Net Price)
-  * Purchase Prices — vendor lines (Amount)
+Three modes over one engine:
+  * Selling Prices    — sales lines, price history newest first (OC Net Price)
+  * Purchase Prices   — vendor lines, price history newest first (Amount)
+  * Warehouse Receipt — receipt lines collapsed per item, received vs ordered
 
-Both turn a flat export into one row per item with every transaction laid out
-newest -> oldest. Access is gated by a password stored in Streamlit secrets.
+Access is gated by a password stored in Streamlit secrets.
 """
 
 from __future__ import annotations
 
 import hmac
+import importlib
 import io
 from datetime import date
 
@@ -19,6 +20,16 @@ import streamlit as st
 
 import core
 import theme
+
+# Streamlit Cloud reloads this entrypoint after a deploy but can keep an
+# already-imported module in sys.modules, so a new page here would call into an
+# old core.py and blow up with AttributeError. Re-executing both modules costs
+# microseconds and keeps them in step with the entrypoint.
+for _module in (core, theme):
+    try:
+        importlib.reload(_module)
+    except Exception:  # noqa: BLE001 — never let a reload hiccup take the app down
+        pass
 
 st.set_page_config(
     page_title="Price History Pivot · Harb Electric",
