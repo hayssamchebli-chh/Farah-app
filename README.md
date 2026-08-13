@@ -3,7 +3,7 @@
 A password-protected Streamlit app that turns a flat transaction export into a pivot with
 **one row per item number** and every transaction for that item laid out newest → oldest.
 
-Two pages, one engine:
+Two pages, switched from a pill bar across the top of the page (no sidebar), sharing one engine:
 
 | Page | Source document | Price column | Sample |
 |---|---|---|---|
@@ -54,7 +54,8 @@ in the page and downloadable as a formatted `.xlsx`.
 ## Adding another source document
 
 Both pages are the same code with a different `Profile` (header aliases + labels). To support a
-third export, add a `Profile` in `core.py` and one `st.Page` entry in `streamlit_app.py`.
+third export, add a `Profile` in `core.py` and one `st.Page` entry in `streamlit_app.py` — the top
+pill bar picks it up automatically.
 
 ## The password
 

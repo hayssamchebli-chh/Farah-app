@@ -56,14 +56,32 @@ span[class*="material-symbols"], [data-testid="stExpanderIcon"] {{
 .block-container {{ padding-top: 4.75rem; max-width: 1280px; }}
 [data-testid="stToolbar"] {{ z-index: 100; }}
 
-/* ---- sidebar navigation ---- */
-[data-testid="stSidebar"] {{ background: var(--surface); border-right: 1px solid var(--line); }}
-[data-testid="stSidebarNav"] a[aria-current="page"] {{
-  background: rgba(0,90,167,.08); border-radius: 8px;
+/* ---- top navigation (pills) ---- */
+.st-key-hbnav {{ margin: -.4rem 0 1.3rem; gap: .5rem; }}
+[data-testid="stPageLink"] a {{
+  display: inline-flex; align-items: center; gap: .45rem;
+  padding: .55rem 1rem; min-height: 44px;
+  border: 1px solid var(--line); border-radius: 999px;
+  background: var(--surface); color: var(--grey) !important;
+  font-weight: 600; font-size: .92rem; text-decoration: none !important;
+  transition: background 160ms ease, border-color 160ms ease, color 160ms ease;
 }}
-[data-testid="stSidebarNav"] a[aria-current="page"] span {{
-  color: var(--brand) !important; font-weight: 600;
+[data-testid="stPageLink"] a:hover {{
+  border-color: var(--brand); color: var(--brand) !important;
+  background: rgba(0,90,167,.05);
 }}
+[data-testid="stPageLink"] a:focus-visible {{
+  outline: 3px solid rgba(0,90,167,.45); outline-offset: 2px;
+}}
+[data-testid="stPageLink"] a p {{ margin: 0; font-weight: 600; }}
+/* the current page: a solid brand pill */
+[class*="st-key-hbnav_on"] [data-testid="stPageLink"] a,
+[class*="st-key-hbnav_on"] [data-testid="stPageLink"] a:hover {{
+  background: var(--brand); border-color: var(--brand);
+  box-shadow: 0 2px 8px rgba(0,90,167,.22);
+}}
+[class*="st-key-hbnav_on"] [data-testid="stPageLink"] a p,
+[class*="st-key-hbnav_on"] [data-testid="stPageLink"] a span {{ color: #fff !important; }}
 
 /* ---- masthead ---- */
 .hb-head {{
@@ -202,6 +220,19 @@ def masthead(title: str, badge: str = "Internal tool") -> None:
         "</div>",
         unsafe_allow_html=True,
     )
+
+
+def nav_bar(pages, active_title: str) -> None:
+    """A row of pill links across the top of the page, current page filled in.
+
+    Each link sits in a keyed container so Streamlit stamps a `st-key-…` class
+    on it, which the CSS uses to fill in the active pill.
+    """
+    with st.container(horizontal=True, gap="small", key="hbnav"):
+        for i, page in enumerate(pages):
+            state = "on" if page.title == active_title else "off"
+            with st.container(key=f"hbnav_{state}_{i}", width="content"):
+                st.page_link(page, width="content")
 
 
 def step(number: int, label: str) -> None:

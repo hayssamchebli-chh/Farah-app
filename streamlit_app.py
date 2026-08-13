@@ -93,7 +93,6 @@ def read_book(uploaded) -> dict[str, pd.DataFrame] | None:
 
 def render(profile: core.Profile) -> None:
     """The whole tool for one source document type."""
-    theme.masthead(profile.title)
     st.caption(profile.blurb)
 
     theme.step(1, "Upload the export")
@@ -192,12 +191,20 @@ def purchase_prices() -> None:
 
 
 def app() -> None:
-    nav = st.navigation(
-        [
-            st.Page(selling_prices, title="Selling Prices", icon=":material/sell:", default=True),
-            st.Page(purchase_prices, title="Purchase Prices", icon=":material/local_shipping:"),
-        ]
-    )
+    pages = [
+        st.Page(
+            selling_prices, title="Selling Prices", icon=":material/sell:",
+            url_path="selling_prices", default=True,
+        ),
+        st.Page(
+            purchase_prices, title="Purchase Prices", icon=":material/local_shipping:",
+            url_path="purchase_prices",
+        ),
+    ]
+    # Streamlit's own nav is hidden: the pill bar below is the navigation.
+    nav = st.navigation(pages, position="hidden")
+    theme.masthead(nav.title)
+    theme.nav_bar(pages, nav.title)
     nav.run()
 
 
