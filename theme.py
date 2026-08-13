@@ -15,9 +15,13 @@ BRAND_LINE = "#E3E7EC"
 BRAND_SURFACE = "#FFFFFF"
 BRAND_CANVAS = "#F4F6F9"
 
-# Difference highlights: (fill, text). Both pairs clear WCAG AA on their fill.
-NEG = ("#FBE3E4", "#A4262C")   # short — warehouse is receiving less than ordered
-POS = ("#E3F1E6", "#0B6B33")   # over  — warehouse is receiving more than ordered
+# Difference highlights: (fill, text on that fill). Solid, saturated fills —
+# both pairs clear WCAG AA (5.0:1 and 5.4:1).
+NEG = ("#D32F2F", "#FFFFFF")   # short — warehouse is receiving less than ordered
+POS = ("#157A40", "#FFFFFF")   # over  — warehouse is receiving more than ordered
+# The same meaning as text on a white surface (stat cards, borders).
+NEG_INK = "#B3261E"
+POS_INK = "#0F6B36"
 
 # Inline mark: ascending bars in a rounded square, matching the tab icon.
 # Swap in the official Harb Electric logo file here to use the real asset.
@@ -142,10 +146,10 @@ span[class*="material-symbols"], [data-testid="stExpanderIcon"] {{
 .hb-stat .k {{
   font-size: .74rem; letter-spacing: .08em; text-transform: uppercase; color: var(--grey);
 }}
-.hb-stat.neg {{ border-left-color: {NEG[1]}; }}
-.hb-stat.neg .v {{ color: {NEG[1]}; }}
-.hb-stat.pos {{ border-left-color: {POS[1]}; }}
-.hb-stat.pos .v {{ color: {POS[1]}; }}
+.hb-stat.neg {{ border-left-color: {NEG_INK}; }}
+.hb-stat.neg .v {{ color: {NEG_INK}; }}
+.hb-stat.pos {{ border-left-color: {POS_INK}; }}
+.hb-stat.pos .v {{ color: {POS_INK}; }}
 
 /* ---- panels ---- */
 [data-testid="stFileUploader"], [data-testid="stDataFrame"] {{

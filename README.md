@@ -61,15 +61,19 @@ Expected columns:
 | Source Document | Source No. | Item No. | Description | Bin Code | Quantity | Qty. to Receive | Over-Receipt Quantity |
 |---|---|---|---|---|---|---|---|
 
-Every line for the same `Item No.` is combined into one row, summing `Quantity`,
-`Qty. to Receive` and `Over-Receipt Quantity`, and a **Difference** column is added:
+Every line for the same `Item No.` is combined into one row, summing `Quantity` and
+`Qty. to Receive`, and a **Difference** column is added:
 
 ```
+Item No. | Description | Quantity | Qty. to Receive | Difference
+
 Difference = Qty. to Receive − Quantity
 ```
 
-- **Negative (red)** — the warehouse is receiving *less* than the order expects.
-- **Positive (green)** — the warehouse is receiving *more* than the order expects.
+- **Negative** — the warehouse is receiving *less* than the order expects; the cell is filled
+  solid red (`#D32F2F`) with white text.
+- **Positive** — the warehouse is receiving *more* than the order expects; solid green
+  (`#157A40`) with white text.
 - Zero is left unshaded.
 
 The sign is written into the number itself (`-2`, `+20`), so the meaning does not depend on
@@ -78,6 +82,9 @@ also carries an auto-filter and a frozen header.
 
 Two checkboxes: **Include Source No. and Bin Code** lists every source document and bin an item
 appears in, and **Only show mismatches** hides items where received matches ordered.
+
+The line count and over-receipt totals stay out of the table — the line count is reported in the
+summary cards above it instead.
 
 ## Adding another source document
 

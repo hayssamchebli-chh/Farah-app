@@ -237,7 +237,8 @@ def build_receipt(rows: list[list], profile: Profile, extras: bool = False) -> d
 
     Quantity (what the purchase order expects) and Qty. to Receive (what the
     warehouse is actually receiving) are summed per item, and Difference is
-    warehouse minus PO: negative = short, positive = over.
+    warehouse minus PO: negative = short, positive = over. The line count and
+    Over-Receipt Quantity are counted for the summary but stay out of the table.
     """
     found = find_header(rows, profile, ("no", "qty"))
     if not found:
@@ -278,7 +279,7 @@ def build_receipt(rows: list[list], profile: Profile, extras: bool = False) -> d
         key = no.upper()
         if key not in groups:
             groups[key] = {
-                "no": no, "desc": "", "qty": 0.0, "recv": 0.0, "over": 0.0,
+                "no": no, "desc": "", "qty": 0.0, "recv": 0.0,
                 "lines": 0, "bins": [], "sources": [],
             }
             order.append(key)
@@ -286,7 +287,7 @@ def build_receipt(rows: list[list], profile: Profile, extras: bool = False) -> d
         g["lines"] += 1
         if not g["desc"]:
             g["desc"] = text(row, "desc")
-        for field in ("qty", "recv", "over"):
+        for field in ("qty", "recv"):
             value = to_num(cell(row, mapping[field])) if field in mapping else None
             g[field] += value or 0.0
         for field, bucket in (("bin", "bins"), ("source", "sources")):
@@ -300,9 +301,7 @@ def build_receipt(rows: list[list], profile: Profile, extras: bool = False) -> d
     header = [profile.labels["no"], "Description"]
     if extras:
         header += ["Source No.", "Bin Code"]
-    header += ["Lines", profile.labels["qty"], profile.labels["recv"], "Difference"]
-    if "over" in mapping:
-        header.append(profile.labels["over"])
+    header += [profile.labels["qty"], profile.labels["recv"], "Difference"]
     diff_col = header.index("Difference")
 
     body, short, over_count, balanced = [], 0, 0, 0
@@ -318,9 +317,7 @@ def build_receipt(rows: list[list], profile: Profile, extras: bool = False) -> d
         out = [g["no"], g["desc"]]
         if extras:
             out += [", ".join(g["sources"]), ", ".join(g["bins"])]
-        out += [g["lines"], g["qty"], g["recv"], diff]
-        if "over" in mapping:
-            out.append(g["over"])
+        out += [g["qty"], g["recv"], diff]
         body.append(out)
 
     return {
