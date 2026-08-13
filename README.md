@@ -1,18 +1,31 @@
 # Price History Pivot
 
-A password-protected Streamlit app that turns a flat sales-lines Excel export into a pivot with
+A password-protected Streamlit app that turns a flat transaction export into a pivot with
 **one row per item number** and every transaction for that item laid out newest → oldest.
+
+Two pages, one engine:
+
+| Page | Source document | Price column | Sample |
+|---|---|---|---|
+| **Selling Prices** | sales lines | OC Net Price | `sample_data.xlsx` |
+| **Purchase Prices** | vendor purchase lines | Amount | `sample_purchases.xlsx` |
 
 ## Input
 
-Any `.xlsx` / `.xlsm` / `.xls` / `.csv` whose header row contains these columns (extra columns are
-ignored, and the header does not have to be the first row):
+Any `.xlsx` / `.xlsm` / `.xls` / `.csv`. Extra columns are ignored, and the header does not have to
+be the first row — the app scans the first 20 rows for it.
+
+**Selling Prices** expects:
 
 | No. | Description | Document No. | Customer Name | Quantity | Pre-Discount Price | Discount % | Net Price | OC Net Price | Currency | Posting Date |
 |---|---|---|---|---|---|---|---|---|---|---|
 
-`No.` may repeat — each repetition is one transaction for that item.
-`sample_data.xlsx` in this repo is a small example.
+**Purchase Prices** expects:
+
+| Document No | Vendor | Date | Item No | Description | Unit Cost | QTY. | Discount Amount | UOM | Discount | Amount | Amount Including VAT | Currency | Shipment No |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+
+The item column may repeat — each repetition is one transaction for that item.
 
 ## Output
 
@@ -20,21 +33,28 @@ ignored, and the header does not have to be the first row):
 No. | R  Date  Qty  Price  Curr. | R  Date  Qty  Price  Curr. | ...
 ```
 
-- **No.** — each item number once, in the order it first appears in the file.
+- **First column** — each item number once (`No.` / `Item No`), in the order it first appears.
 - The `R, Date, Qty, Price, Curr.` block repeats as many times as the item with the **most**
   transactions requires; shorter items leave the trailing blocks blank.
 - **R** — 1, 2, 3 … the occurrence number.
-- **Date** — Posting Date. Block 1 is the most recent transaction, then progressively older.
-  Undated lines sort last; same-date lines keep their original file order.
-- **Qty** — Quantity.
-- **Price** — OC Net Price (falls back to Net Price if there is no OC column).
+- **Date** — Posting Date (sales) or Date (purchases). Block 1 is the most recent transaction,
+  then progressively older. Undated lines sort last; same-date lines keep their original file order.
+- **Qty** — Quantity / QTY.
+- **Price** — OC Net Price (sales; falls back to Net Price if there is no OC column), or Amount
+  (purchases). The purchases page also offers **Unit Cost** and **Amount Including VAT** in a
+  dropdown, since Amount is a line total rather than a per-unit figure.
 - **Curr.** — Currency.
 
-Filled **R** cells are shaded blue (blank padding is left alone), on screen and in the download.
-Change `R_BLUE` at the top of `streamlit_app.py` to use a different colour.
+Filled **R** cells are shaded brand blue (blank padding is left alone), on screen and in the
+download. Change `BRAND_BLUE` in `theme.py` to use a different colour.
 
-A Description column can be added next to `No.` with the checkbox. Results are previewed in the
-page and downloadable as a formatted `.xlsx`.
+A Description column can be added next to the item number with the checkbox. Results are previewed
+in the page and downloadable as a formatted `.xlsx`.
+
+## Adding another source document
+
+Both pages are the same code with a different `Profile` (header aliases + labels). To support a
+third export, add a `Profile` in `core.py` and one `st.Page` entry in `streamlit_app.py`.
 
 ## The password
 
@@ -76,7 +96,8 @@ streamlit run streamlit_app.py
 ## Offline version
 
 `standalone/index.html` is the same tool as a single self-contained web page — open it directly in
-a browser, no Python and no network needed. It has **no password gate**; it is meant for local use.
+a browser, no Python and no network needed. It covers the **selling prices** workflow only, and has
+**no password gate**; it is meant for local use.
 Its on-screen R cells are blue too, but its `.xlsx` download is unstyled — the free build of SheetJS
 cannot write cell fills. Use the Streamlit app when you need the colour in the file.
 
@@ -102,9 +123,11 @@ The header uses a generic bolt mark rather than the official logo file — repla
 
 ## Files
 
-- `streamlit_app.py` — the app: parsing, pivot, Excel export, password gate
+- `streamlit_app.py` — password gate, page navigation, and the shared page layout
+- `core.py` — the pivot engine: header detection, parsing, pivot, Excel export, per-source profiles
+- `theme.py` — Harb Electric palette, CSS and page chrome
 - `requirements.txt` — Python dependencies
 - `.streamlit/config.toml` — brand theme (committed)
 - `.streamlit/secrets.toml.example` — template for the password secret
-- `sample_data.xlsx` — example input
+- `sample_data.xlsx`, `sample_purchases.xlsx` — example inputs
 - `standalone/` — offline browser-only version (SheetJS 0.18.5 vendored)
