@@ -126,10 +126,15 @@ span[class*="material-symbols"], [data-testid="stExpanderIcon"] {{
   color: var(--brand); background: rgba(0,90,167,.08);
   border: 1px solid rgba(0,90,167,.18); border-radius: 999px; padding: .3rem .7rem;
 }}
-.hb-mode {{
-  font-size: .82rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
-  color: var(--ink); padding-right: .9rem; margin-right: .3rem;
-  border-right: 1px solid var(--line);
+/* ---- application title, above the pills ---- */
+.hb-app {{
+  display: flex; align-items: center; justify-content: center; gap: .7rem;
+  margin: 0 0 1.1rem;
+}}
+.hb-app-title {{
+  font-family: 'Teko', 'Barlow', sans-serif; font-weight: 600;
+  font-size: 2.6rem; line-height: 1; letter-spacing: .03em;
+  color: var(--ink);
 }}
 
 /* ---- section labels ---- */
@@ -227,6 +232,8 @@ input:focus-visible {{
 @media (max-width: 640px) {{
   .hb-head {{ flex-wrap: wrap; }}
   .hb-head .hb-title {{ font-size: 1.6rem; }}
+  .hb-app-title {{ font-size: 2rem; }}
+  .hb-app svg {{ width: 30px; height: 30px; }}
 }}
 </style>
 """
@@ -236,17 +243,27 @@ def inject_css() -> None:
     st.markdown(CSS, unsafe_allow_html=True)
 
 
-def masthead(page_title: str, badge: str = "Internal tool") -> None:
-    """App title with the current mode named beside it."""
+def app_header() -> None:
+    """The application title, centred above the mode pills."""
     # NB: keep this HTML flush left — indented lines are parsed as a code block.
     inject_css()
     st.markdown(
-        '<div class="hb-head">'
+        '<div class="hb-app">'
         + LOGO_SVG
-        + f'<div><p class="hb-title">{APP_TITLE}</p>'
+        + f'<span class="hb-app-title">{APP_TITLE}</span>'
+        "</div>",
+        unsafe_allow_html=True,
+    )
+
+
+def masthead(page_title: str, badge: str = "Internal tool") -> None:
+    """The current mode's own title bar."""
+    inject_css()
+    st.markdown(
+        '<div class="hb-head">'
+        f'<div><p class="hb-title">{page_title}</p>'
         f'<p class="hb-sub">{APP_EYEBROW}</p></div>'
         '<div class="hb-spacer"></div>'
-        f'<span class="hb-mode">{page_title}</span>'
         f'<span class="hb-badge">{badge}</span>'
         "</div>",
         unsafe_allow_html=True,
