@@ -122,11 +122,13 @@ def map_headers(header_row: list, profile: Profile) -> dict:
     return mapping
 
 
-def find_header(rows: list[list], profile: Profile) -> tuple[int, dict] | None:
-    """First row (within the first 20) giving both an item column and a date column."""
+def find_header(
+    rows: list[list], profile: Profile, must_have: tuple[str, ...] = ("no", "date")
+) -> tuple[int, dict] | None:
+    """First row (within the first 20) that carries all of `must_have`."""
     for r in range(min(len(rows), 20)):
         mapping = map_headers(rows[r], profile)
-        if "no" in mapping and "date" in mapping:
+        if all(f in mapping for f in must_have):
             return r, mapping
     return None
 
@@ -135,7 +137,7 @@ def find_header(rows: list[list], profile: Profile) -> tuple[int, dict] | None:
 
 
 def build_pivot(rows: list[list], profile: Profile, include_desc: bool) -> dict:
-    found = find_header(rows, profile)
+    found = find_header(rows, profile, ("no", "date"))
     if not found:
         raise ValueError(
             f'Could not find a header row containing both "{profile.labels["no"]}" '
@@ -223,6 +225,187 @@ def build_pivot(rows: list[list], profile: Profile, include_desc: bool) -> dict:
         "skipped": skipped,
         "include_desc": include_desc,
     }
+
+
+# ------------------------------------------------------------------ receipt check
+
+RECEIPT_REQUIRED = ("no", "qty", "recv")
+
+
+def build_receipt(rows: list[list], profile: Profile, extras: bool = False) -> dict:
+    """Collapse repeated Item No. lines into one row per item.
+
+    Quantity (what the purchase order expects) and Qty. to Receive (what the
+    warehouse is actually receiving) are summed per item, and Difference is
+    warehouse minus PO: negative = short, positive = over.
+    """
+    found = find_header(rows, profile, ("no", "qty"))
+    if not found:
+        raise ValueError(
+            f'Could not find a header row containing both "{profile.labels["no"]}" '
+            f'and "{profile.labels["qty"]}".'
+        )
+    header_row, mapping = found
+
+    missing = [f for f in RECEIPT_REQUIRED if f not in mapping]
+    if missing:
+        raise ValueError("Missing column(s): " + ", ".join(profile.labels[f] for f in missing))
+
+    groups: dict[str, dict] = {}
+    order: list[str] = []
+    skipped = 0
+
+    def cell(row, idx):
+        return row[idx] if idx is not None and idx < len(row) else None
+
+    def text(row, field) -> str:
+        if field not in mapping:
+            return ""
+        v = cell(row, mapping[field])
+        return "" if v is None or pd.isna(v) else str(v).strip()
+
+    for r in range(header_row + 1, len(rows)):
+        row = rows[r]
+        raw_no = cell(row, mapping["no"])
+        no = "" if raw_no is None or pd.isna(raw_no) else str(raw_no).strip()
+        if no.endswith(".0") and str(raw_no).replace(".", "", 1).isdigit():
+            no = no[:-2]
+        if not no:
+            if any(c is not None and not pd.isna(c) and str(c).strip() for c in row):
+                skipped += 1
+            continue
+
+        key = no.upper()
+        if key not in groups:
+            groups[key] = {
+                "no": no, "desc": "", "qty": 0.0, "recv": 0.0, "over": 0.0,
+                "lines": 0, "bins": [], "sources": [],
+            }
+            order.append(key)
+        g = groups[key]
+        g["lines"] += 1
+        if not g["desc"]:
+            g["desc"] = text(row, "desc")
+        for field in ("qty", "recv", "over"):
+            value = to_num(cell(row, mapping[field])) if field in mapping else None
+            g[field] += value or 0.0
+        for field, bucket in (("bin", "bins"), ("source", "sources")):
+            value = text(row, field)
+            if value and value not in g[bucket]:
+                g[bucket].append(value)
+
+    if not order:
+        raise ValueError("No data rows found under the header.")
+
+    header = [profile.labels["no"], "Description"]
+    if extras:
+        header += ["Source No.", "Bin Code"]
+    header += ["Lines", profile.labels["qty"], profile.labels["recv"], "Difference"]
+    if "over" in mapping:
+        header.append(profile.labels["over"])
+    diff_col = header.index("Difference")
+
+    body, short, over_count, balanced = [], 0, 0, 0
+    for key in order:
+        g = groups[key]
+        diff = g["recv"] - g["qty"]
+        if diff < 0:
+            short += 1
+        elif diff > 0:
+            over_count += 1
+        else:
+            balanced += 1
+        out = [g["no"], g["desc"]]
+        if extras:
+            out += [", ".join(g["sources"]), ", ".join(g["bins"])]
+        out += [g["lines"], g["qty"], g["recv"], diff]
+        if "over" in mapping:
+            out.append(g["over"])
+        body.append(out)
+
+    return {
+        "header": header,
+        "body": body,
+        "diff_col": diff_col,
+        "items": len(order),
+        "lines": sum(groups[k]["lines"] for k in order),
+        "combined": sum(1 for k in order if groups[k]["lines"] > 1),
+        "short": short,
+        "over": over_count,
+        "balanced": balanced,
+        "skipped": skipped,
+    }
+
+
+def receipt_to_excel(receipt: dict, neg: tuple[str, str], pos: tuple[str, str]) -> bytes:
+    """Workbook with the Difference column shaded red (short) or green (over)."""
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Warehouse Receipt"
+
+    ws.append(receipt["header"])
+    for c in range(1, len(receipt["header"]) + 1):
+        ws.cell(row=1, column=c).font = Font(bold=True)
+        ws.cell(row=1, column=c).alignment = Alignment(horizontal="center")
+
+    for row in receipt["body"]:
+        ws.append(row)
+
+    widths = []
+    for name in receipt["header"]:
+        widths.append(46 if name == "Description" else (22 if name in ("Source No.", "Bin Code") else 15))
+    for i, w in enumerate(widths, start=1):
+        ws.column_dimensions[get_column_letter(i)].width = w
+
+    neg_fill = PatternFill("solid", start_color=neg[0].lstrip("#").upper(),
+                           end_color=neg[0].lstrip("#").upper())
+    pos_fill = PatternFill("solid", start_color=pos[0].lstrip("#").upper(),
+                           end_color=pos[0].lstrip("#").upper())
+    neg_font = Font(bold=True, color=neg[1].lstrip("#").upper())
+    pos_font = Font(bold=True, color=pos[1].lstrip("#").upper())
+
+    diff_col = receipt["diff_col"] + 1  # 1-based
+    for r in range(2, len(receipt["body"]) + 2):
+        cell = ws.cell(row=r, column=diff_col)
+        # the sign is spelled out in the number itself, so colour is never the
+        # only thing carrying the meaning
+        cell.number_format = "+#,##0.###;-#,##0.###;0"
+        cell.alignment = Alignment(horizontal="center")
+        value = cell.value or 0
+        if value < 0:
+            cell.fill, cell.font = neg_fill, neg_font
+        elif value > 0:
+            cell.fill, cell.font = pos_fill, pos_font
+
+    ws.freeze_panes = ws.cell(row=2, column=3)
+    ws.auto_filter.ref = ws.dimensions
+
+    buf = io.BytesIO()
+    wb.save(buf)
+    return buf.getvalue()
+
+
+def receipt_frame(receipt: dict) -> pd.DataFrame:
+    return pd.DataFrame(receipt["body"], columns=receipt["header"])
+
+
+def style_receipt(df: pd.DataFrame, receipt: dict, neg: tuple[str, str], pos: tuple[str, str]):
+    """Shade the Difference column: red when short, green when over."""
+    diff = df.columns[receipt["diff_col"]]
+
+    def paint(col: pd.Series):
+        out = []
+        for v in col:
+            if v < 0:
+                out.append(f"background-color: {neg[0]}; color: {neg[1]}; font-weight: 700;")
+            elif v > 0:
+                out.append(f"background-color: {pos[0]}; color: {pos[1]}; font-weight: 700;")
+            else:
+                out.append("")
+        return out
+
+    styler = df.style.apply(paint, subset=[diff])
+    return styler.format({diff: lambda v: f"{v:+,g}" if v else "0"})
 
 
 # -------------------------------------------------------------------------- output
@@ -354,4 +537,36 @@ PURCHASES = Profile(
         "Unit Cost": ["unitcost", "unitprice", "cost"],
         "Amount Including VAT": ["amountincludingvat", "amountinclvat", "amountinclvat"],
     },
+)
+
+RECEIPT = Profile(
+    key="receipt",
+    title="Warehouse Receipt",
+    blurb=(
+        "Warehouse receipt lines — one row per item, with what the warehouse is "
+        "receiving checked against what the order expects."
+    ),
+    fields={
+        "no": ["itemno", "itemnumber", "item", "no"],
+        "desc": ["description", "itemdescription", "desc"],
+        "qty": ["quantity", "qty"],
+        "recv": ["qtytoreceive", "quantitytoreceive", "qtytorecieve", "qtytoreceived"],
+        "over": ["overreceiptquantity", "overreceiptqty", "overreceipt"],
+        "bin": ["bincode", "bin"],
+        "source": ["sourceno", "sourcenumber"],
+        "srcdoc": ["sourcedocument"],
+    },
+    labels={
+        "no": "Item No.",
+        "qty": "Quantity",
+        "recv": "Qty. to Receive",
+        "over": "Over-Receipt Quantity",
+        "bin": "Bin Code",
+        "source": "Source No.",
+    },
+    expected=(
+        "Source Document, Source No., Item No., Description, Bin Code, Quantity, "
+        "Qty. to Receive, Over-Receipt Quantity"
+    ),
+    file_stem="warehouse-receipt-check",
 )

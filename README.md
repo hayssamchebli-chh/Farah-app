@@ -3,12 +3,13 @@
 A password-protected Streamlit app that turns a flat transaction export into a pivot with
 **one row per item number** and every transaction for that item laid out newest → oldest.
 
-Two pages, switched from a pill bar across the top of the page (no sidebar), sharing one engine:
+Three modes, switched from a pill bar across the top of the page (no sidebar):
 
-| Page | Source document | Price column | Sample |
+| Page | Source document | What it does | Sample |
 |---|---|---|---|
-| **Selling Prices** | sales lines | OC Net Price | `sample_data.xlsx` |
-| **Purchase Prices** | vendor purchase lines | Amount | `sample_purchases.xlsx` |
+| **Selling Prices** | sales lines | price history, newest first (OC Net Price) | `sample_data.xlsx` |
+| **Purchase Prices** | vendor purchase lines | price history, newest first (Amount) | `sample_purchases.xlsx` |
+| **Warehouse Receipt** | warehouse receipt lines | combines repeated items and checks received vs ordered | `sample_receipt.xlsx` |
 
 ## Input
 
@@ -50,6 +51,33 @@ download. Change `BRAND_BLUE` in `theme.py` to use a different colour.
 
 A Description column can be added next to the item number with the checkbox. Results are previewed
 in the page and downloadable as a formatted `.xlsx`.
+
+## Warehouse Receipt
+
+A different transform: instead of spreading transactions sideways, it **collapses** them.
+
+Expected columns:
+
+| Source Document | Source No. | Item No. | Description | Bin Code | Quantity | Qty. to Receive | Over-Receipt Quantity |
+|---|---|---|---|---|---|---|---|
+
+Every line for the same `Item No.` is combined into one row, summing `Quantity`,
+`Qty. to Receive` and `Over-Receipt Quantity`, and a **Difference** column is added:
+
+```
+Difference = Qty. to Receive − Quantity
+```
+
+- **Negative (red)** — the warehouse is receiving *less* than the order expects.
+- **Positive (green)** — the warehouse is receiving *more* than the order expects.
+- Zero is left unshaded.
+
+The sign is written into the number itself (`-2`, `+20`), so the meaning does not depend on
+colour alone. Highlighting applies to both the on-screen table and the Excel download; the export
+also carries an auto-filter and a frozen header.
+
+Two checkboxes: **Include Source No. and Bin Code** lists every source document and bin an item
+appears in, and **Only show mismatches** hides items where received matches ordered.
 
 ## Adding another source document
 
@@ -130,5 +158,5 @@ The header uses a generic bolt mark rather than the official logo file — repla
 - `requirements.txt` — Python dependencies
 - `.streamlit/config.toml` — brand theme (committed)
 - `.streamlit/secrets.toml.example` — template for the password secret
-- `sample_data.xlsx`, `sample_purchases.xlsx` — example inputs
+- `sample_data.xlsx`, `sample_purchases.xlsx`, `sample_receipt.xlsx` — example inputs
 - `standalone/` — offline browser-only version (SheetJS 0.18.5 vendored)

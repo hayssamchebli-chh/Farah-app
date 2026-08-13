@@ -182,12 +182,115 @@ def render(profile: core.Profile) -> None:
     theme.footer()
 
 
+def render_receipt(profile: core.Profile) -> None:
+    """Warehouse receipt check: one row per item, warehouse qty vs ordered qty."""
+    st.caption(profile.blurb)
+
+    theme.step(1, "Upload the warehouse receipt")
+    uploaded = st.file_uploader(
+        "Excel or CSV file",
+        type=["xlsx", "xlsm", "xls", "csv"],
+        label_visibility="collapsed",
+        key=f"upload_{profile.key}",
+        help=f"Expected columns: {profile.expected}",
+    )
+    if not uploaded:
+        st.caption(
+            "Accepted: .xlsx, .xlsm, .xls, .csv — the header row does not have to be the "
+            "first row. Files are processed in this session only and are never stored."
+        )
+        theme.footer()
+        return
+
+    book = read_book(uploaded)
+    if book is None:
+        theme.footer()
+        return
+
+    theme.step(2, "Choose the sheet")
+    col1, col2, col3 = st.columns([2, 1.2, 1.2])
+    with col1:
+        sheet = st.selectbox(
+            "Sheet", list(book.keys()), key=f"sheet_{profile.key}",
+            help="Pick the tab holding the receipt lines.",
+        )
+    with col2:
+        extras = st.checkbox(
+            "Include Source No. and Bin Code", key=f"extras_{profile.key}",
+            help="Lists every source document and bin the item appears in.",
+        )
+    with col3:
+        only_diff = st.checkbox(
+            "Only show mismatches", key=f"onlydiff_{profile.key}",
+            help="Hides items where the warehouse quantity matches the order.",
+        )
+
+    frame = book[sheet]
+    rows = frame.where(pd.notna(frame), None).values.tolist()
+
+    try:
+        receipt = core.build_receipt(rows, profile, extras)
+    except ValueError as exc:
+        st.error(str(exc))
+        theme.footer()
+        return
+
+    theme.step(3, "Review and export")
+    theme.stat_cards(
+        [
+            (receipt["items"], "Unique items"),
+            (receipt["lines"], "Source lines"),
+            (receipt["combined"], "Items combined"),
+            (receipt["short"], "Short (negative)", "neg"),
+            (receipt["over"], "Over (positive)", "pos"),
+        ]
+    )
+    if receipt["skipped"]:
+        st.warning(
+            f"{receipt['skipped']} row(s) were skipped because they had no "
+            f"{profile.labels['no']} value."
+        )
+
+    shown = dict(receipt)
+    if only_diff:
+        diff_col = receipt["diff_col"]
+        shown["body"] = [r for r in receipt["body"] if r[diff_col] != 0]
+        if not shown["body"]:
+            st.success("Every item matches — no shortfalls and no over-receipts.")
+
+    if shown["body"]:
+        st.dataframe(
+            core.style_receipt(core.receipt_frame(shown), shown, theme.NEG, theme.POS),
+            use_container_width=True,
+            hide_index=True,
+        )
+    st.caption(
+        f"**Difference = {profile.labels['recv']} − {profile.labels['qty']}.** "
+        "Negative (red) means the warehouse is receiving less than the order expects; "
+        "positive (green) means more."
+    )
+
+    st.download_button(
+        "Download Excel",
+        data=core.receipt_to_excel(shown, theme.NEG, theme.POS),
+        file_name=f"{profile.file_stem}-{date.today():%Y-%m-%d}.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        type="primary",
+        key=f"dl_{profile.key}",
+    )
+    theme.footer()
+
+
 def selling_prices() -> None:
     render(core.SALES)
 
 
 def purchase_prices() -> None:
     render(core.PURCHASES)
+
+
+def warehouse_receipt() -> None:
+    render_receipt(core.RECEIPT)
 
 
 def app() -> None:
@@ -199,6 +302,10 @@ def app() -> None:
         st.Page(
             purchase_prices, title="Purchase Prices", icon=":material/local_shipping:",
             url_path="purchase_prices",
+        ),
+        st.Page(
+            warehouse_receipt, title="Warehouse Receipt", icon=":material/inventory_2:",
+            url_path="warehouse_receipt",
         ),
     ]
     # Streamlit's own nav is hidden: the pill bar below is the navigation.

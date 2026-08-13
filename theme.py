@@ -15,6 +15,10 @@ BRAND_LINE = "#E3E7EC"
 BRAND_SURFACE = "#FFFFFF"
 BRAND_CANVAS = "#F4F6F9"
 
+# Difference highlights: (fill, text). Both pairs clear WCAG AA on their fill.
+NEG = ("#FBE3E4", "#A4262C")   # short — warehouse is receiving less than ordered
+POS = ("#E3F1E6", "#0B6B33")   # over  — warehouse is receiving more than ordered
+
 # Inline mark: ascending bars in a rounded square, matching the tab icon.
 # Swap in the official Harb Electric logo file here to use the real asset.
 LOGO_SVG = (
@@ -138,6 +142,10 @@ span[class*="material-symbols"], [data-testid="stExpanderIcon"] {{
 .hb-stat .k {{
   font-size: .74rem; letter-spacing: .08em; text-transform: uppercase; color: var(--grey);
 }}
+.hb-stat.neg {{ border-left-color: {NEG[1]}; }}
+.hb-stat.neg .v {{ color: {NEG[1]}; }}
+.hb-stat.pos {{ border-left-color: {POS[1]}; }}
+.hb-stat.pos .v {{ color: {POS[1]}; }}
 
 /* ---- panels ---- */
 [data-testid="stFileUploader"], [data-testid="stDataFrame"] {{
@@ -249,16 +257,17 @@ def step(number: int, label: str) -> None:
     )
 
 
-def stat_cards(cards: list[tuple[int, str]]) -> None:
-    st.markdown(
-        '<div class="hb-stats">'
-        + "".join(
-            f'<div class="hb-stat"><div class="v">{v:,}</div><div class="k">{k}</div></div>'
-            for v, k in cards
+def stat_cards(cards) -> None:
+    """Cards of (value, label) or (value, label, tone) where tone is neg/pos."""
+    html = ['<div class="hb-stats">']
+    for card in cards:
+        value, label = card[0], card[1]
+        tone = f" {card[2]}" if len(card) > 2 else ""
+        html.append(
+            f'<div class="hb-stat{tone}"><div class="v">{value:,}</div>'
+            f'<div class="k">{label}</div></div>'
         )
-        + "</div>",
-        unsafe_allow_html=True,
-    )
+    st.markdown("".join(html) + "</div>", unsafe_allow_html=True)
 
 
 def footer() -> None:
