@@ -18,8 +18,10 @@ BRAND_LINE = "#E3E7EC"
 BRAND_SURFACE = "#FFFFFF"
 BRAND_CANVAS = "#F4F6F9"
 
-# Difference highlights: (fill, text on that fill). Solid, saturated fills —
-# both pairs clear WCAG AA (5.0:1 and 5.4:1).
+# Difference highlights: (fill, text on that fill).
+# Contrast of the current pairs: white on #FF0000 is 4.0:1 and white on #32CD32
+# is 2.12:1 — both under the 4.5:1 readability threshold. Switching the text to
+# black would give 5.25:1 and 9.91:1 while keeping these fills.
 NEG = ("#FF0000", "#FFFFFF")   # short — warehouse is receiving less than ordered
 POS = ("#32cd32", "#FFFFFF")   # over  — warehouse is receiving more than ordered
 # The same meaning as text on a white surface (stat cards, borders).
