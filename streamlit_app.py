@@ -32,7 +32,7 @@ for _module in (core, theme):
         pass
 
 st.set_page_config(
-    page_title="Price History Pivot · Harb Electric",
+    page_title="Procurement Toolkit · Harb Electric",
     page_icon="📊",
     layout="wide",
 )
@@ -64,7 +64,7 @@ def check_password() -> bool:
     with mid:
         st.markdown(
             f'<div class="hb-login">{theme.LOGO_SVG}'
-            "<h2>Price History Pivot</h2>"
+            f"<h2>{theme.APP_TITLE}</h2>"
             "<p>Harb Electric internal tool. Enter the access password to continue.</p>",
             unsafe_allow_html=True,
         )

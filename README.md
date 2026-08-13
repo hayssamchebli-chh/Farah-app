@@ -1,7 +1,8 @@
-# Price History Pivot
+# Procurement Toolkit
 
-A password-protected Streamlit app that turns a flat transaction export into a pivot with
-**one row per item number** and every transaction for that item laid out newest → oldest.
+A password-protected Streamlit app for Harb Electric tendering. It turns flat transaction exports
+into **one row per item number** — price history laid out newest → oldest, or a warehouse receipt
+checked against what was ordered.
 
 Three modes, switched from a pill bar across the top of the page (no sidebar):
 
@@ -150,6 +151,9 @@ The interface follows Harb Electric's identity, sampled from
 | Grey | `#626974` | secondary text, labels |
 | Canvas / surface | `#F4F6F9` / `#FFFFFF` | page background / cards |
 | Type | Teko (display) + Barlow (UI) | the site's own fonts |
+
+The app name lives in `APP_TITLE` at the top of `theme.py` (and the browser tab title in
+`streamlit_app.py`); the mode pill bar is centred above the masthead.
 
 All foreground/background pairs meet WCAG AA (white on brand blue is 6.95:1).
 The tokens live at the top of `streamlit_app.py` and in `.streamlit/config.toml`.

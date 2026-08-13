@@ -7,6 +7,9 @@ from __future__ import annotations
 
 import streamlit as st
 
+APP_TITLE = "Procurement Toolkit"
+APP_EYEBROW = "Harb Electric &middot; Tendering"
+
 BRAND_BLUE = "#005AA7"
 BRAND_BLUE_DARK = "#00447E"
 BRAND_INK = "#16171E"
@@ -68,7 +71,7 @@ span[class*="material-symbols"], [data-testid="stExpanderIcon"] {{
 /* the injected <style> lands in its own block and would otherwise reserve a
    full row of vertical gap */
 [data-testid="stElementContainer"]:has(style) {{ display: none !important; }}
-.st-key-hbnav {{ margin: 0 !important; gap: .7rem; flex-wrap: wrap; }}
+.st-key-hbnav {{ margin: 0 !important; gap: .7rem; flex-wrap: wrap; justify-content: center; }}
 [data-testid="stPageLink"] a {{
   display: inline-flex; align-items: center; justify-content: center; gap: .6rem;
   padding: .8rem 2.4rem; min-height: 56px;
@@ -120,6 +123,11 @@ span[class*="material-symbols"], [data-testid="stExpanderIcon"] {{
   font-size: .72rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
   color: var(--brand); background: rgba(0,90,167,.08);
   border: 1px solid rgba(0,90,167,.18); border-radius: 999px; padding: .3rem .7rem;
+}}
+.hb-mode {{
+  font-size: .82rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--ink); padding-right: .9rem; margin-right: .3rem;
+  border-right: 1px solid var(--line);
 }}
 
 /* ---- section labels ---- */
@@ -226,15 +234,17 @@ def inject_css() -> None:
     st.markdown(CSS, unsafe_allow_html=True)
 
 
-def masthead(title: str, badge: str = "Internal tool") -> None:
+def masthead(page_title: str, badge: str = "Internal tool") -> None:
+    """App title with the current mode named beside it."""
     # NB: keep this HTML flush left — indented lines are parsed as a code block.
     inject_css()
     st.markdown(
         '<div class="hb-head">'
         + LOGO_SVG
-        + f'<div><p class="hb-title">{title}</p>'
-        '<p class="hb-sub">Harb Electric &middot; Tendering</p></div>'
+        + f'<div><p class="hb-title">{APP_TITLE}</p>'
+        f'<p class="hb-sub">{APP_EYEBROW}</p></div>'
         '<div class="hb-spacer"></div>'
+        f'<span class="hb-mode">{page_title}</span>'
         f'<span class="hb-badge">{badge}</span>'
         "</div>",
         unsafe_allow_html=True,
@@ -247,7 +257,9 @@ def nav_bar(pages, active_title: str) -> None:
     Each link sits in a keyed container so Streamlit stamps a `st-key-…` class
     on it, which the CSS uses to fill in the active pill.
     """
-    with st.container(horizontal=True, gap="small", key="hbnav"):
+    with st.container(
+        horizontal=True, gap="small", horizontal_alignment="center", key="hbnav"
+    ):
         for i, page in enumerate(pages):
             state = "on" if page.title == active_title else "off"
             with st.container(key=f"hbnav_{state}_{i}", width="content"):
