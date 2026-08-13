@@ -17,7 +17,7 @@ BRAND_CANVAS = "#F4F6F9"
 
 # Difference highlights: (fill, text on that fill). Solid, saturated fills —
 # both pairs clear WCAG AA (5.0:1 and 5.4:1).
-NEG = ("#B22222", "#FFFFFF")   # short — warehouse is receiving less than ordered
+NEG = ("#FF0000", "#FFFFFF")   # short — warehouse is receiving less than ordered
 POS = ("#32cd32", "#FFFFFF")   # over  — warehouse is receiving more than ordered
 # The same meaning as text on a white surface (stat cards, borders).
 NEG_INK = "#B3261E"
