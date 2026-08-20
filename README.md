@@ -9,7 +9,7 @@ Three modes, switched from a pill bar across the top of the page (no sidebar):
 | Page | Source document | What it does | Sample |
 |---|---|---|---|
 | **Selling Prices** | sales lines | price history, newest first (OC Net Price) | `sample_data.xlsx` |
-| **Purchase Prices** | vendor purchase lines | price history, newest first (Amount) | `sample_purchases.xlsx` |
+| **Purchase Prices** | vendor purchase lines | price history, newest first (Unit Cost) | `sample_purchases.xlsx` |
 | **Warehouse Receipt** | warehouse receipt lines | combines repeated items and checks received vs ordered | `sample_receipt.xlsx` |
 
 ## Input
@@ -42,9 +42,10 @@ No. | R  Date  Qty  Price  Curr. | R  Date  Qty  Price  Curr. | ...
 - **Date** — Posting Date (sales) or Date (purchases). Block 1 is the most recent transaction,
   then progressively older. Undated lines sort last; same-date lines keep their original file order.
 - **Qty** — Quantity / QTY.
-- **Price** — OC Net Price (sales; falls back to Net Price if there is no OC column), or Amount
-  (purchases). The purchases page also offers **Unit Cost** and **Amount Including VAT** in a
-  dropdown, since Amount is a line total rather than a per-unit figure.
+- **Price** — OC Net Price (sales; falls back to Net Price if there is no OC column), or Unit Cost
+  (purchases; falls back to Amount if the file has no Unit Cost column). Unit Cost is per-unit, so
+  prices stay comparable across lines bought in different quantities. The purchases page also
+  offers **Amount** (the line total) and **Amount Including VAT** in a dropdown.
 - **Curr.** — Currency.
 
 Filled **R** cells are shaded brand blue (blank padding is left alone), on screen and in the

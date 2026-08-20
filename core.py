@@ -513,14 +513,14 @@ PURCHASES = Profile(
         "no": ["itemno", "itemnumber", "item", "no", "partno", "partnumber"],
         "desc": ["description", "itemdescription", "desc"],
         "qty": ["qty", "quantity", "qtys"],
-        "price": ["amount"],
+        "price": ["unitcost", "unitprice", "cost"],
         "curr": ["currency", "curr", "currencycode"],
         "date": ["date", "documentdate", "postingdate", "postingdt"],
     },
     labels={
         "no": "Item No",
         "qty": "QTY.",
-        "price": "Amount",
+        "price": "Unit Cost",
         "curr": "Currency",
         "date": "Date",
     },
@@ -529,11 +529,14 @@ PURCHASES = Profile(
         "Discount Amount, UOM, Discount, Amount, Amount Including VAT, Currency, Shipment No"
     ),
     file_stem="purchase-price-history",
+    # Unit Cost is the default: it is per-unit, so prices stay comparable across
+    # lines with different quantities. Amount is a line total.
     price_choices={
-        "Amount": ["amount"],
         "Unit Cost": ["unitcost", "unitprice", "cost"],
-        "Amount Including VAT": ["amountincludingvat", "amountinclvat", "amountinclvat"],
+        "Amount": ["amount"],
+        "Amount Including VAT": ["amountincludingvat", "amountinclvat"],
     },
+    price_fallback=["amount"],
 )
 
 RECEIPT = Profile(
